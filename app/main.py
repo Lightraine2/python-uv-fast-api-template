@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.routers import auth, users
 
 app = FastAPI(
     title="FastAPI Application",
@@ -6,9 +7,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+'''
+Authenticated routes
+'''
+
+app.include_router(auth.router)
+app.include_router(users.router)
+
 @app.get("/")
 async def root():
-    """Public endpoint - no authentication required."""
+    """
+    Base API URL endpoint - no authentication required.
+    """
     return {
         "message": "Welcome to FastAPI with JWT Authentication",
         "docs": "/docs",
@@ -22,5 +32,5 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
     return {"status": "healthy"}
+

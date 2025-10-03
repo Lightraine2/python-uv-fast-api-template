@@ -5,7 +5,7 @@ from app.models import Token
 from app.auth import (
     authenticate_user,
     create_access_token,
-    fake_users_db,
+    example_users_db,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
@@ -14,8 +14,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Login endpoint to get access token."""
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    user = authenticate_user(example_users_db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

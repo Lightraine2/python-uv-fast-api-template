@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuration
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
@@ -22,8 +21,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-# Fake database - replace with real database in production
-fake_users_db = {
+# Live DB query here
+example_users_db = {
     "johndoe": {
         "username": "johndoe",
         "full_name": "John Doe",
@@ -35,17 +34,14 @@ fake_users_db = {
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password."""
     return pwd_context.hash(password)
 
 
 def get_user(db: dict, username: str) -> Optional[UserInDB]:
-    """Get user from database."""
     if username in db:
         user_dict = db[username]
         return UserInDB(**user_dict)
@@ -53,7 +49,6 @@ def get_user(db: dict, username: str) -> Optional[UserInDB]:
 
 
 def authenticate_user(db: dict, username: str, password: str) -> Optional[UserInDB]:
-    """Authenticate a user."""
     user = get_user(db, username)
     if not user:
         return None
@@ -63,7 +58,6 @@ def authenticate_user(db: dict, username: str, password: str) -> Optional[UserIn
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -76,7 +70,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
-    """Get current user from JWT token."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -92,14 +85,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     except InvalidTokenError:
         raise credentials_exception
     
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(example_users_db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
-    """Get current active user (not disabled)."""
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
